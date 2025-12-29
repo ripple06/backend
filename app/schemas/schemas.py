@@ -53,6 +53,13 @@ class ReviewListReponse(BaseModel):
     reviews: List[ReviewItem]
 
 
+# quiz
+class QuizResponse(BaseModel):
+    title: str
+    content: List[str]
+    correct: int
+
+
 # user
 class UserBase(BaseModel):
     mbti: Optional[str] = None
