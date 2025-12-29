@@ -52,6 +52,8 @@ class ReviewItem(BaseModel):
 class ReviewListReponse(BaseModel):
     reviews: List[ReviewItem]
 
+
+# user
 class UserBase(BaseModel):
     mbti: Optional[str] = None
 
