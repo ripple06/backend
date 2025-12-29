@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+supabase # Supabase 클라이언트 라이브러리
