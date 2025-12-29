@@ -4,11 +4,7 @@ from typing import Optional
 import uuid
 
 class UserBase(BaseModel):
-    email: EmailStr
     mbti: Optional[str] = None
-
-class UserCreate(UserBase):
-    password: str
 
 # Supabase 유저 응답을 위한 스키마
 class User(UserBase):
