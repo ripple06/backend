@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from supabase import Client, APIResponse, User as SupabaseUser
 
-from app.schemas import user as user_schema
+from app.schemas import schemas as user_schema
 from app.schemas import course as course_schema
 from app.services import user_service
 from app.core.supabase_client import get_supabase

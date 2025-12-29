@@ -1,6 +1,6 @@
 # app/services/user_service.py
 from supabase import Client
-from app.schemas import user as user_schema
+from app.schemas import schemas as user_schema
 
 def create_user(supabase: Client, user: user_schema.UserCreate):
     """
