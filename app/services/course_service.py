@@ -20,36 +20,75 @@ def get_mbti(user_id: int, supabase: Client) -> Optional[str]:
 
 COMMON_COURSE_COLOR = "#8FA1FF"
 
+def _try_select_variants(table_name: str, supabase: Client, variants: list, filters: dict = None):
+    """
+    select 문자열 표기(큰따옴표 포함/미포함 등)를 여러가지로 시도해서 데이터가 반환되는 첫 결과를 리턴합니다.
+    filters: {'field': value, ...} 형태로 eq 필터들을 전달 가능 (선택).
+    """
+    for sel in variants:
+        try:
+            q = supabase.table(table_name).select(sel)
+            if filters:
+                for k, v in filters.items():
+                    q = q.eq(k, v)
+            resp = q.execute()
+            if getattr(resp, "data", None):
+                return resp
+        except Exception:
+            # 시도 중 에러나 실패는 무시하고 다음 표기법 시도
+            continue
+    return None
+
+def _try_order_variants(table, select_str, supabase: Client, course_id):
+    """
+    order 필드 표기도 여러가지로 시도해서 경로 데이터를 반환합니다.
+    """
+    order_variants = ['"order"', 'order']
+    for ord_field in order_variants:
+        try:
+            resp = supabase.table(table)\
+                .select(select_str)\
+                .eq('courseId', course_id)\
+                .order(ord_field, asc=True)\
+                .execute()
+            if getattr(resp, "data", None):
+                return resp
+        except Exception:
+            continue
+    # 마지막으로 order 없이 그냥 select 만 시도
+    try:
+        resp = supabase.table(table).select(select_str).eq('courseId', course_id).execute()
+        if getattr(resp, "data", None):
+            return resp
+    except Exception:
+        pass
+    return None
+
 def get_all_courses_service(supabase: Client) -> List[dict]:
     """
     모든 코스를 조회합니다. 코스 전체 경로(path)를 포함합니다.
+    여러 select 표기법을 시도하여 데이터가 정상적으로 반환되도록 합니다.
     """
     try:
-        response = supabase.table('courses')\
-            .select('id, name, "totalDistance"')\
-            .execute()
-        
-        if not response.data:
+        select_variants = ['id, name, "totalDistance"', 'id, name, totalDistance', '*']
+        resp = _try_select_variants('courses', supabase, select_variants)
+        if not resp or not getattr(resp, "data", None):
+            # 데이터가 없으면 빈 리스트 반환
             return []
 
         courses = []
-        for course in response.data:
-            # 경로 조회
-            paths_response = supabase.table('course_paths')\
-                .select('latitude, longitude')\
-                .eq('courseId', course['id'])\
-                .order('"order"', asc=True)\
-                .execute()
-
+        for course in resp.data:
+            # 경로 조회: order 표기법을 여러가지로 시도
+            paths_resp = _try_order_variants('course_paths', 'latitude, longitude', supabase, course.get('id'))
             paths = [
                 {"lat": float(p['latitude']), "lng": float(p['longitude'])}
-                for p in paths_response.data
-            ] if paths_response.data else []
+                for p in (paths_resp.data if paths_resp and getattr(paths_resp, "data", None) else [])
+            ]
 
             courses.append({
-                'courseId': course['id'],
-                'name': course['name'],
-                'totalDistance': course['totalDistance'],
+                'courseId': course.get('id'),
+                'name': course.get('name'),
+                'totalDistance': course.get('totalDistance'),
                 'color': COMMON_COURSE_COLOR,
                 'paths': paths
             })
@@ -61,34 +100,26 @@ def get_all_courses_service(supabase: Client) -> List[dict]:
 
 def get_course_by_id_service(course_id: int, supabase: Client) -> Optional[dict]:
     """
-    특정 코스의 상세 정보를 조회합니다. 코스 전체 경로(path)를 포함합니다.
+    특정 코스의 상세 정보를 조회합니다. 여러 select 표기법과 order 표기를 시도합니다.
     """
     try:
-        course_response = supabase.table('courses')\
-            .select('id, name, "totalDistance"')\
-            .eq('id', course_id)\
-            .execute()
-        
-        if not course_response.data or len(course_response.data) == 0:
+        select_variants = ['id, name, "totalDistance"', 'id, name, totalDistance', '*']
+        resp = _try_select_variants('courses', supabase, select_variants, filters={'id': course_id})
+        if not resp or not getattr(resp, "data", None) or len(resp.data) == 0:
             return None
-        
-        course = course_response.data[0]
 
-        paths_response = supabase.table('course_paths')\
-            .select('latitude, longitude')\
-            .eq('courseId', course_id)\
-            .order('"order"', asc=True)\
-            .execute()
+        course = resp.data[0]
 
+        paths_resp = _try_order_variants('course_paths', 'latitude, longitude', supabase, course_id)
         paths = [
             {"lat": float(p['latitude']), "lng": float(p['longitude'])}
-            for p in paths_response.data
-        ] if paths_response.data else []
+            for p in (paths_resp.data if paths_resp and getattr(paths_resp, "data", None) else [])
+        ]
 
         return {
-            'courseId': course['id'],
-            'name': course['name'],
-            'totalDistance': course['totalDistance'],
+            'courseId': course.get('id'),
+            'name': course.get('name'),
+            'totalDistance': course.get('totalDistance'),
             'color': COMMON_COURSE_COLOR,
             'paths': paths
         }
