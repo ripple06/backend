@@ -43,11 +43,7 @@ class SeaEcosystemResponse(BaseModel):
 
 
 # course
-class StartPoint(BaseModel):
-    lat: float
-    lng: float
-
-class EndPoint(BaseModel):
+class Point(BaseModel):
     lat: float
     lng: float
 
@@ -56,8 +52,7 @@ class Course(BaseModel):
     name: str
     totalDistance: float
     color: str
-    startPoint: StartPoint
-    endPoint: EndPoint
+    paths: List[Point]
 
 class CourseListResponse(BaseModel):
     courses: List[Course]
