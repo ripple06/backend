@@ -1,5 +1,5 @@
 # app/api/question.py
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from supabase import Client
 from app.schemas.schemas import *
 from app.services.question_service import (
@@ -9,6 +9,7 @@ from app.services.question_service import (
     answer_question_service
 )
 from app.core.supabase_client import get_supabase
+from typing import Optional
 
 router = APIRouter()
 
@@ -28,18 +29,20 @@ def _safe_int(val):
             return None
 
 # 4. 질문 대답하기 API
-@router.post("/questions/{question_id}/answer", response_model=Message)
+@router.post("/questions/{question_id}/answer/{user_id}", response_model=Message)
 async def answer_question(
     question_id: int,
     answer: QuestionAnswer,
+    user_id: int,
     supabase: Client = Depends(get_supabase)
 ):
     """
     특정 질문에 대한 답변을 저장합니다.
+    user_id를 주면 answerId로 저장됩니다.
     """
     try:
-        # 실제 서비스 호출
-        result = answer_question_service(question_id, answer.answer, supabase)
+        # 실제 서비스 호출 (answerer id 전달)
+        result = answer_question_service(question_id, answer.answer, supabase, answerer_id=user_id)
         return Message(message="질문 답변 성공!")
     except ValueError as e:
         raise HTTPException(404, detail=str(e))
