@@ -8,7 +8,7 @@ import uuid
 class SignupRequest(BaseModel):
     name: str
     password: str
-    
+
 
 # mbti
 class Mbti(BaseModel):
@@ -40,7 +40,11 @@ class SeaEcosystemResponse(BaseModel):
 
 
 # course
-class PathPoint(BaseModel):
+class StartPoint(BaseModel):
+    lat: float
+    lng: float
+
+class EndPoint(BaseModel):
     lat: float
     lng: float
 
@@ -49,7 +53,8 @@ class Course(BaseModel):
     name: str
     totalDistance: float
     color: str
-    path: List[PathPoint]
+    startPoint: StartPoint
+    endPoint: EndPoint
 
 class CourseListResponse(BaseModel):
     courses: List[Course]
