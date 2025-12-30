@@ -4,7 +4,7 @@ from typing import Optional, List
 import uuid
 
 # mbti
-class MbtiRequest(BaseModel):
+class Mbti(BaseModel):
     mbti: str = Field(...)
 
 
