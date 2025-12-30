@@ -86,17 +86,25 @@ def get_question_list_service(course_id: int, supabase: Client) -> List[dict]:
         print(f"질문 목록 조회 실패: {e}")
         return []
     
-def answer_question_service(question_id: int, answer: str, supabase: Client) -> dict:
+def answer_question_service(question_id: int, answer: str, supabase: Client, answerer_id: int) -> dict:
     """
     질문에 답변을 저장합니다.
+    answerer_id가 주어지면 answerId 컬럼에 저장합니다.
     """
     try:
         question_resp = supabase.table('questions').select('*').eq('id', question_id).execute()
         if not question_resp.data or len(question_resp.data) == 0:
             raise ValueError("질문을 찾을 수 없습니다.")
 
+        update_fields = {
+            'answer': answer,
+            'answered_at': datetime.now().isoformat()
+        }
+        if answerer_id is not None:
+            update_fields['answerId'] = answerer_id
+
         update_resp = supabase.table('questions')\
-            .update({'answer': answer, 'answered_at': datetime.now().isoformat()})\
+            .update(update_fields)\
             .eq('id', question_id)\
             .execute()
         
