@@ -18,13 +18,15 @@ def get_mbti(user_id: int, supabase: Client) -> Optional[str]:
         print(f"MBTI 찾기 실패 > {user_id}: {e}")
         return None
 
+COMMON_COURSE_COLOR = "#8FA1FF"
+
 def get_all_courses_service(supabase: Client) -> List[dict]:
     """
     모든 코스를 조회합니다.
     """
     try:
         response = supabase.table('courses')\
-            .select('id, name, totalDistance, color, start_lat, start_lng, end_lat, end_lng')\
+            .select('id, name, totalDistance, start_lat, start_lng, end_lat, end_lng')\
             .execute()
         
         if not response.data:
@@ -37,7 +39,7 @@ def get_all_courses_service(supabase: Client) -> List[dict]:
                 'courseId': course['id'],
                 'name': course['name'],
                 'totalDistance': course['totalDistance'],
-                'color': course.get('color', '#000000'),
+                'color': COMMON_COURSE_COLOR,
                 'startPoint': {
                     'lat': course['start_lat'],
                     'lng': course['start_lng']
