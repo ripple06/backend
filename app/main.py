@@ -1,5 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api import course, mbti, question, quiz, seaecosystem, seaemotion, user
 
 app = FastAPI(
@@ -8,13 +9,22 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.include_router(course.router, tags=["courses"])
-app.include_router(mbti.router, tags=["mbti"])
-app.include_router(question.router, tags=["question"])
-app.include_router(quiz.router, tags=["quiz"])
-app.include_router(seaecosystem.router, tags=["seaecosystem"])
-app.include_router(seaemotion.router, tags=['seaemotion'])
-app.include_router(user.router, tags=['user'])
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(course.router, prefix="/api", tags=["courses"])
+app.include_router(mbti.router, prefix="/api", tags=["mbti"])
+app.include_router(question.router, prefix="/api", tags=["question"])
+app.include_router(quiz.router, prefix="/api", tags=["quiz"])
+app.include_router(seaecosystem.router, prefix="/api", tags=["seaecosystem"])
+app.include_router(seaemotion.router, prefix="/api", tags=['seaemotion'])
+app.include_router(user.router, prefix="/api", tags=['user'])
 
 @app.get("/", tags=["Root"])
 async def read_root():
