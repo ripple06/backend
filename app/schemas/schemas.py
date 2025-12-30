@@ -20,6 +20,8 @@ class QuestionItem(BaseModel):
   title: str
   content: Optional[str] = None
   id: Optional[int] = None  # 추가: 응답에 id 포함 가능, 생성 시에는 미전달 허용
+  answer: Optional[str] = None       # 추가: 답변 텍스트
+  answerId: Optional[int] = None     # 추가: 답변자 id 또는 답변 관련 id
 
 class QuestionListResponse(BaseModel):
     questions: List[QuestionItem]
