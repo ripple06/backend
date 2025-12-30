@@ -10,10 +10,10 @@ app = FastAPI(
 
 app.include_router(course.router, prefix="/api", tags=["courses"])
 app.include_router(mbti.router, prefix="/api", tags=["mbti"])
-app.include_router(question.router, prefix="/api", tag=["question"])
-app.include_router(quiz.router, prefix="/api", tag=["quiz"])
-app.include_router(seaecosystem.router, prefix="/api", tag=["seaecosystem"])
-app.include_router(seaemotion.router, prefix="/api", tag=['seaemotion'])
+app.include_router(question.router, prefix="/api", tags=["question"])
+app.include_router(quiz.router, prefix="/api", tags=["quiz"])
+app.include_router(seaecosystem.router, prefix="/api", tags=["seaecosystem"])
+app.include_router(seaemotion.router, prefix="/api", tags=['seaemotion'])
 
 @app.get("/", tags=["Root"])
 async def read_root():
