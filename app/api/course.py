@@ -82,3 +82,4 @@ def get_reviews(course_id: int, supabase: Client = Depends(get_supabase)):
       return ReviewListReponse(reviews = review_items)
     except Exception as e:
       raise HTTPException(500, detail="리뷰 조회 중 오류가 발생했습니다.")
+    
