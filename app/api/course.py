@@ -10,7 +10,7 @@ router = APIRouter()
 @router.get("/courses", response_model=CourseListResponse)
 def get_courses(user_id: int = Query(...), supabase: Client = Depends(get_supabase)):
   """
-  사용자의 MBTI를 기반으로 코스를 추천합니다.
+  사용자의 MBTI + 바다 분석 결과를 기반으로 코스를 추천합니다.
   """
   # 사용자 MBTI 조회
   mbti = get_mbti(user_id, supabase)
