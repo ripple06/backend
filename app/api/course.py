@@ -31,7 +31,7 @@ def get_courses(user_id: int = Query(...), supabase: Client = Depends(get_supaba
   except Exception as e:
     raise HTTPException(500, detail="코스 조회 중 오류가 발생했습니다.")
 
-@router.get("/courses/{course_id}", response_model=CourseDetail)
+@router.get("/courses/{course_id}", response_model=Course)
 def get_course_detail(course_id: int, supabase: Client = Depends(get_supabase)):
   """
   특정 코스의 상세 정보를 조회합니다.
