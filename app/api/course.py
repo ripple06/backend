@@ -1,10 +1,11 @@
 # app/routes/course.py
-from fastapi import APIRouter, Query, Depends, HTTPException
+from fastapi import APIRouter, Query, Depends, HTTPException, Body
 from supabase import Client
 from app.schemas.schemas import *
 from app.services.course_service import *
+from app.services.ai_service import ai_service
 from app.core.supabase_client import get_supabase
-from typing import Optional
+from typing import Optional, Dict, Any
 
 router = APIRouter()
 
