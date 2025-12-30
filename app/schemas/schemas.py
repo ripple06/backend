@@ -3,6 +3,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 import uuid
 
+
+# user
+class SignupRequest(BaseModel):
+    name: str
+    password: str
+    
+
 # mbti
 class Mbti(BaseModel):
     mbti: str = Field(...)

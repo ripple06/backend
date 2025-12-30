@@ -1,6 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
-from app.api import course, mbti, question, quiz, seaecosystem, seaemotion
+from app.api import course, mbti, question, quiz, seaecosystem, seaemotion, user
 
 app = FastAPI(
     title="Ripple API",
@@ -14,6 +14,7 @@ app.include_router(question.router, tags=["question"])
 app.include_router(quiz.router, tags=["quiz"])
 app.include_router(seaecosystem.router, tags=["seaecosystem"])
 app.include_router(seaemotion.router, tags=['seaemotion'])
+app.include_router(user.router, tags=['user'])
 
 @app.get("/", tags=["Root"])
 async def read_root():
