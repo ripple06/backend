@@ -22,34 +22,38 @@ COMMON_COURSE_COLOR = "#8FA1FF"
 
 def get_all_courses_service(supabase: Client) -> List[dict]:
     """
-    모든 코스를 조회합니다.
+    모든 코스를 조회합니다. 코스 전체 경로(path)를 포함합니다.
     """
     try:
         response = supabase.table('courses')\
-            .select('id, name, totalDistance, start_lat, start_lng, end_lat, end_lng')\
+            .select('id, name, "totalDistance"')\
             .execute()
         
         if not response.data:
             return []
-        
-        # 데이터 형식 변환
+
         courses = []
         for course in response.data:
+            # 경로 조회
+            paths_response = supabase.table('course_paths')\
+                .select('latitude, longitude')\
+                .eq('courseId', course['id'])\
+                .order('"order"', asc=True)\
+                .execute()
+
+            paths = [
+                {"lat": float(p['latitude']), "lng": float(p['longitude'])}
+                for p in paths_response.data
+            ] if paths_response.data else []
+
             courses.append({
                 'courseId': course['id'],
                 'name': course['name'],
                 'totalDistance': course['totalDistance'],
                 'color': COMMON_COURSE_COLOR,
-                'startPoint': {
-                    'lat': course['start_lat'],
-                    'lng': course['start_lng']
-                },
-                'endPoint': {
-                    'lat': course['end_lat'],
-                    'lng': course['end_lng']
-                }
+                'paths': paths
             })
-        
+
         return courses
     except Exception as e:
         print(f"코스 목록 조회 실패: {e}")
@@ -57,11 +61,11 @@ def get_all_courses_service(supabase: Client) -> List[dict]:
 
 def get_course_by_id_service(course_id: int, supabase: Client) -> Optional[dict]:
     """
-    특정 코스의 상세 정보를 조회합니다.
+    특정 코스의 상세 정보를 조회합니다. 코스 전체 경로(path)를 포함합니다.
     """
     try:
         course_response = supabase.table('courses')\
-            .select('id, name, totalDistance, color, start_lat, start_lng, end_lat, end_lng')\
+            .select('id, name, "totalDistance"')\
             .eq('id', course_id)\
             .execute()
         
@@ -69,24 +73,30 @@ def get_course_by_id_service(course_id: int, supabase: Client) -> Optional[dict]
             return None
         
         course = course_response.data[0]
-        
+
+        paths_response = supabase.table('course_paths')\
+            .select('latitude, longitude')\
+            .eq('courseId', course_id)\
+            .order('"order"', asc=True)\
+            .execute()
+
+        paths = [
+            {"lat": float(p['latitude']), "lng": float(p['longitude'])}
+            for p in paths_response.data
+        ] if paths_response.data else []
+
         return {
             'courseId': course['id'],
             'name': course['name'],
             'totalDistance': course['totalDistance'],
-            'color': course.get('color', '#000000'),
-            'startPoint': {
-                'lat': course['start_lat'],
-                'lng': course['start_lng']
-            },
-            'endPoint': {
-                'lat': course['end_lat'],
-                'lng': course['end_lng']
-            }
+            'color': COMMON_COURSE_COLOR,
+            'paths': paths
         }
+
     except Exception as e:
         print(f"코스 상세 조회 실패: {e}")
         return None
+
 
 def recommend_course(mbti: str, sea_emotion: SeaEmotionRequest, supabase: Client) -> List[dict]:
     """
