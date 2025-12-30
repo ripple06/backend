@@ -7,7 +7,7 @@ router = APIRouter()
 async def save_mbti(user_id: str, request: MbtiRequest):
     """
     사용자의 MBTI를 저장합니다.
-    
+     
     - **user_id**: 사용자 ID
     - **mbti**: MBTI 유형 (예: AAAA, INFP 등)
     """
