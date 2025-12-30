@@ -24,22 +24,42 @@ def get_all_courses_service(supabase: Client) -> List[dict]:
     """
     try:
         response = supabase.table('courses')\
-            .select('id, name, totalDistance')\
+            .select('id, name, totalDistance, color, start_lat, start_lng, end_lat, end_lng')\
             .execute()
         
-        return response.data if response.data else []
+        if not response.data:
+            return []
+        
+        # 데이터 형식 변환
+        courses = []
+        for course in response.data:
+            courses.append({
+                'courseId': course['id'],
+                'name': course['name'],
+                'totalDistance': course['totalDistance'],
+                'color': course.get('color', '#000000'),
+                'startPoint': {
+                    'lat': course['start_lat'],
+                    'lng': course['start_lng']
+                },
+                'endPoint': {
+                    'lat': course['end_lat'],
+                    'lng': course['end_lng']
+                }
+            })
+        
+        return courses
     except Exception as e:
         print(f"코스 목록 조회 실패: {e}")
         return []
 
 def get_course_by_id_service(course_id: int, supabase: Client) -> Optional[dict]:
     """
-    특정 코스의 상세 정보를 조회합니다 (경로 포함).
+    특정 코스의 상세 정보를 조회합니다.
     """
     try:
-        # 코스 기본 정보 조회
         course_response = supabase.table('courses')\
-            .select('id, name, totalDistance')\
+            .select('id, name, totalDistance, color, start_lat, start_lng, end_lat, end_lng')\
             .eq('id', course_id)\
             .execute()
         
@@ -48,15 +68,20 @@ def get_course_by_id_service(course_id: int, supabase: Client) -> Optional[dict]
         
         course = course_response.data[0]
         
-        # 코스 경로 조회
-        path_response = supabase.table('path')\
-            .select('lat, lng')\
-            .eq('courseId', course_id)\
-            .execute()
-        
-        course['path'] = path_response.data if path_response.data else []
-        
-        return course
+        return {
+            'courseId': course['id'],
+            'name': course['name'],
+            'totalDistance': course['totalDistance'],
+            'color': course.get('color', '#000000'),
+            'startPoint': {
+                'lat': course['start_lat'],
+                'lng': course['start_lng']
+            },
+            'endPoint': {
+                'lat': course['end_lat'],
+                'lng': course['end_lng']
+            }
+        }
     except Exception as e:
         print(f"코스 상세 조회 실패: {e}")
         return None
