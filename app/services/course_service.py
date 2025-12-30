@@ -157,13 +157,19 @@ def create_review_service(user_id: int, course_id: int, review_data: ReviewItem,
         if existing.data and len(existing.data) > 0:
             raise ValueError("이미 이 코스에 대한 리뷰를 작성하셨습니다.")
         
+        # rating을 DB 정수 타입에 맞게 변환 (반올림)
+        try:
+            rating_int = int(round(float(review_data.rating)))
+        except Exception:
+            rating_int = int(review_data.rating)  # fallback
+        
         # 리뷰 데이터 준비
         review_insert = {
             'userId': user_id,
             'courseId': course_id,
             'title': review_data.title,
             'keyword': review_data.keyword,
-            'rating': review_data.rating,
+            'rating': rating_int,
             'content': review_data.content,
             'created_at': datetime.now().isoformat(),
             'updated_at': datetime.now().isoformat()
@@ -196,11 +202,17 @@ def update_review_service(user_id: int, course_id: int, review_data: ReviewItem,
         if not existing.data or len(existing.data) == 0:
             raise ValueError("수정할 리뷰가 존재하지 않습니다.")
         
+        # rating을 DB 정수 타입에 맞게 변환 (반올림)
+        try:
+            rating_int = int(round(float(review_data.rating)))
+        except Exception:
+            rating_int = int(review_data.rating)  # fallback
+        
         # 리뷰 업데이트 데이터 준비
         review_update = {
             'title': review_data.title,
             'keyword': review_data.keyword,
-            'rating': review_data.rating,
+            'rating': rating_int,
             'content': review_data.content,
             'updated_at': datetime.now().isoformat()
         }
