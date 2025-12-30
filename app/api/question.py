@@ -1,32 +1,12 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException
 from typing import List
+from app.schemas.schemas import *
 
-app = FastAPI()
-
-# Request Model
-class QuestionCreate(BaseModel):
-    title: str
-    content: str
-
-# Response Models
-class QuestionResponse(BaseModel):
-    title: str
-    content: str
-    message: str
-
-class QuestionListItem(BaseModel):
-    title: str
-    content: str
-    message: str
-
-class QuestionListResponse(BaseModel):
-    questions: List[QuestionListItem]
-
+router = APIRouter()
 
 # 1. 질문 생성 API
-@app.post("/questions/{user_id}")
-async def create_question(user_id: str, question: QuestionCreate):
+@router.post("/questions/{user_id}")
+async def create_question(user_id: str, question: QuestionItem):
     """
     코스 탐방 완료 후 다음 사람에게 질문 생성
     """
@@ -40,7 +20,7 @@ async def create_question(user_id: str, question: QuestionCreate):
 
 
 # 2. 질문 단일 보기 API
-@app.get("/questions/{course_id}", response_model=QuestionResponse)
+@router.get("/questions/{course_id}", response_model=QuestionItem)
 async def get_question(course_id: str):
     """
     특정 코스의 질문 조회
@@ -56,7 +36,7 @@ async def get_question(course_id: str):
 
 
 # 3. 질문 목록 보기 API
-@app.get("/questions/{course_id}/list", response_model=QuestionListResponse)
+@router.get("/questions/{course_id}/list", response_model=QuestionListResponse)
 async def get_question_list(course_id: str):
     """
     특정 코스의 모든 질문 목록 조회

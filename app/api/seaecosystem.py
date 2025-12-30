@@ -1,22 +1,17 @@
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Query
+from app.schemas.schemas import *
 from typing import Optional
 import os
 from supabase import create_client, Client
 
-app = FastAPI()
+router = APIRouter()
 
 # Supabase 클라이언트 설정 (환경변수 확인 필요)
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
-# Response Model
-class SeaEcosystemResponse(BaseModel):
-    creature: str
-    specialties: str
-
-@app.get("/seaecosystem", response_model=SeaEcosystemResponse)
+@router.get("/seaecosystem", response_model=SeaEcosystemResponse)
 async def get_sea_ecosystem(location: Optional[str] = Query(None, description="지역명")):
     """
     해양 생태계 불러오기 API

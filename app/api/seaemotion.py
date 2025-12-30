@@ -1,15 +1,9 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException
 import requests
 from datetime import datetime
+from app.schemas.schemas import *
 
-app = FastAPI()
-
-# Response Model
-class SeaEmotionResponse(BaseModel):
-    emotion: str
-    name: str
-    message: str
+router = APIRouter()
 
 # 캐시 저장소 (실제로는 Redis나 DB 사용 권장)
 emotion_cache = {}
@@ -69,7 +63,7 @@ def analyze_sea_emotion(sea_data: dict) -> dict:
             "message": "안전에 주의하세요"
         }
 
-@app.get("/seaemotion", response_model=SeaEmotionResponse)
+@router.get("/seaemotion", response_model=SeaEmotionResponse)
 async def get_sea_emotion(location: str):
     """
     바다 성격 불러오기 API
