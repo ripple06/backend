@@ -318,3 +318,29 @@ def complete_course_service(user_id: int, course_id: int, supabase: Client) -> d
     except Exception as e:
         print(f"코스 기록 실패: {e}")
         raise e
+
+def get_completed_courses_service(user_id: int, supabase: Client) -> List[dict]:
+    """
+    특정 사용자가 완료한 코스 목록을 반환합니다.
+    completed_courses 테이블을 조회하여 course_id 목록을 얻은 뒤,
+    각 코스의 상세(get_course_by_id_service)을 호출합니다.
+    """
+    try:
+        resp = supabase.table('completed_courses')\
+            .select('courseId')\
+            .eq('userId', user_id)\
+            .execute()
+        
+        if not resp.data:
+            return []
+        
+        course_ids = [row.get('courseId') for row in resp.data if row.get('courseId') is not None]
+        courses = []
+        for cid in course_ids:
+            course = get_course_by_id_service(cid, supabase)
+            if course:
+                courses.append(course)
+        return courses
+    except Exception as e:
+        print(f"완료된 코스 조회 실패 (user_id={user_id}): {e}")
+        return []
