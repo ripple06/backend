@@ -1,60 +1,82 @@
-from fastapi import APIRouter, HTTPException
+# app/api/question.py
+from fastapi import APIRouter, HTTPException, Depends
+from supabase import Client
 from typing import List
 from app.schemas.schemas import *
+from app.services.question_service import (
+    create_question_service,
+    get_question_service,
+    get_question_list_service
+)
+from app.core.supabase_client import get_supabase
 
 router = APIRouter()
 
 # 1. 질문 생성 API
-@router.post("/questions/{user_id}")
-async def create_question(user_id: str, question: QuestionItem):
+@router.post("/questions/{course_id}/{user_id}", response_model=Message)
+async def create_question(
+    course_id: int, 
+    user_id: int, 
+    question: QuestionItem,
+    supabase: Client = Depends(get_supabase)
+):
     """
     코스 탐방 완료 후 다음 사람에게 질문 생성
     """
-    # TODO: 데이터베이스에 질문 저장
-    # - user_id로 사용자 확인
-    # - question.title, question.content 저장
-    
-    return {
-        "message": "당신의 질문이 생성되었습니다!"
-    }
+    try:
+        result = create_question_service(user_id, course_id, question, supabase)
+        return Message(message="당신의 질문이 생성되었습니다!")
+    except ValueError as e:
+        raise HTTPException(404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(500, detail="질문 생성 중 오류가 발생했습니다.")
 
 
 # 2. 질문 단일 보기 API
 @router.get("/questions/{course_id}", response_model=QuestionItem)
-async def get_question(course_id: str):
+async def get_question(
+    course_id: int,
+    supabase: Client = Depends(get_supabase)
+):
     """
-    특정 코스의 질문 조회
+    특정 코스의 가장 최근 질문 조회
     """
-    # TODO: 데이터베이스에서 course_id에 해당하는 질문 조회
-    
-    # 예시 응답
-    return {
-        "title": "제목",
-        "content": "뻔딱뻔딱",
-        "message": "조회 성공!"
-    }
+    try:
+        question = get_question_service(course_id, supabase)
+        
+        if not question:
+            raise HTTPException(404, detail="질문을 찾을 수 없습니다.")
+        
+        return QuestionItem(
+            title=question['title'],
+            content=question['content']
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail="질문 조회 중 오류가 발생했습니다.")
 
 
 # 3. 질문 목록 보기 API
 @router.get("/questions/{course_id}/list", response_model=QuestionListResponse)
-async def get_question_list(course_id: str):
+async def get_question_list(
+    course_id: int,
+    supabase: Client = Depends(get_supabase)
+):
     """
     특정 코스의 모든 질문 목록 조회
     """
-    # TODO: 데이터베이스에서 course_id에 해당하는 모든 질문 조회
-    
-    # 예시 응답
-    return {
-        "questions": [
-            {
-                "title": "제목",
-                "content": "뻔딱뻔딱",
-                "message": "조회 성공!"
-            },
-            {
-                "title": "제목",
-                "content": "뻔딱뻔딱",
-                "message": "조회 성공!"
-            }
+    try:
+        questions = get_question_list_service(course_id, supabase)
+        
+        question_items = [
+            QuestionItem(
+                title=q['title'],
+                content=q['content']
+            )
+            for q in questions
         ]
-    }
+        
+        return QuestionListResponse(questions=question_items)
+    except Exception as e:
+        raise HTTPException(500, detail="질문 목록 조회 중 오류가 발생했습니다.")
