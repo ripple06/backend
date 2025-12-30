@@ -16,7 +16,13 @@ async def get_sea_emotion(location: str, supabase: Client = Depends(get_supabase
         # API Key (실제로는 환경변수 사용 권장)
         api_key = "ed3cbf2791458ab07d899ba85e16650e75c35184993c1f7a392d742dc4594c20"
         
-        return get_sea_emotion_service(location, api_key, supabase)
+        emotion_result = get_sea_emotion_service(location, api_key, supabase)
+        
+        # main 스키마에 맞게 변환 (emotion, name 필드만)
+        return SeaEmotionResponse(
+            emotion=emotion_result.get("emotion", "🌊"),
+            name=emotion_result.get("name", "바다")
+        )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"바다 성격 분석 실패: {str(e)}")
