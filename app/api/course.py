@@ -85,6 +85,45 @@ def complete_course(course_id: str, user_id: str, supabase: Client = Depends(get
   except Exception as e:
     raise HTTPException(500, detail="코스 완료 처리 중 오류가 발생했습니다.")
 
+@router.post("/courses/{course_id}/{user_id}/start", response_model=Message)
+def start_course(course_id: str, user_id: str, supabase: Client = Depends(get_supabase)):
+    """
+    코스 시작
+    - completed_courses에 기존 기록이 있으면 삭제
+    """
+    try:
+        cid = _parse_int_from_path('course_id', course_id)
+        uid = _parse_int_from_path('user_id', user_id)
+
+        start_course_service(uid, cid, supabase)
+        return Message(message="코스 시작!")
+    except ValueError as e:
+        raise HTTPException(404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail="코스 시작 처리 중 오류가 발생했습니다.")
+
+
+@router.post("/courses/{course_id}/{user_id}/finish", response_model=Message)
+def finish_course(course_id: str, user_id: str, supabase: Client = Depends(get_supabase)):
+    """
+    코스 종료
+    - completed_courses에 INSERT
+    """
+    try:
+        cid = _parse_int_from_path('course_id', course_id)
+        uid = _parse_int_from_path('user_id', user_id)
+
+        finish_course_service(uid, cid, supabase)
+        return Message(message="코스 완료! 저장 되었습니다!")
+    except ValueError as e:
+        raise HTTPException(404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail="코스 완료 처리 중 오류가 발생했습니다.")
+
 
 # review
 @router.post("/reviews/{course_id}/{user_id}", response_model=Message)
