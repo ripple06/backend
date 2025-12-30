@@ -85,3 +85,22 @@ def get_question_list_service(course_id: int, supabase: Client) -> List[dict]:
     except Exception as e:
         print(f"질문 목록 조회 실패: {e}")
         return []
+    
+def answer_question_service(question_id: int, answer: str, supabase: Client) -> dict:
+    """
+    질문에 답변을 저장합니다.
+    """
+    try:
+        question = supabase.table('questions').select('*').eq('id', question_id).execute()
+        if not question.data or len(question.data) == 0:
+            raise ValueError("질문을 찾을 수 없습니다.")
+
+        response = supabase.table('questions')\
+            .update({'answer': answer, 'answered_at': datetime.now().isoformat()})\
+            .eq('id', question_id)\
+            .execute()
+        
+        return response.data[0] if response.data else {}
+    except Exception as e:
+        print(f"질문 답변 실패: {e}")
+        raise e
