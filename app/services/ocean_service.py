@@ -187,7 +187,6 @@ def analyze_sea_conditions(location_name: str, region_code: str = "101", skip_ap
     print(f"  📈 [ocean_service] 점수 계산: {score_duration:.3f}ms, 감정 결정: {emotion_duration:.3f}ms, 총: {total_duration:.3f}ms")
     
     return SeaEmotionResponse(
-        emoji=emotion["emoji"],
-        name=emotion["name"],
-        reason=emotion["reason"]
+        emotion=emotion["emoji"],  # main 스키마에 맞게 emoji -> emotion으로 변환
+        name=emotion["name"]
     )
