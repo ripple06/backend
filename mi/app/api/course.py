@@ -1,11 +1,10 @@
 # app/routes/course.py
-from fastapi import APIRouter, Query, Depends, HTTPException, Body
+from fastapi import APIRouter, Query, Depends, HTTPException
 from supabase import Client
 from app.schemas.schemas import *
 from app.services.course_service import *
-from app.services.ai_service import ai_service
 from app.core.supabase_client import get_supabase
-from typing import Optional, Dict, Any
+from typing import Optional
 
 router = APIRouter()
 
@@ -33,23 +32,18 @@ def _parse_int_from_path(name: str, value: str) -> int:
         raise HTTPException(status_code=400, detail=f"Path parameter '{name}' must be an integer. Received: {value}")
 
 @router.get("/courses", response_model=CourseListResponse)
-def get_courses(user_id: int = Query(...), supabase: Client = Depends(get_supabase)):
+def get_courses(user_id: Optional[int] = Query(None), supabase: Client = Depends(get_supabase)):
   """
-  사용자의 MBTI + 바다 분석 결과를 기반으로 코스를 추천합니다.
+  user_id가 없으면 전체 코스 반환.
+  user_id가 주어지면 해당 사용자가 completed_courses에 기록한 코스만 반환.
   """
   try:
-    # 사용자 MBTI 조회
-    mbti = get_mbti(user_id, supabase)
-    
-    if not mbti:
-      raise HTTPException(
-        status_code=404, 
-        detail="유저가 없거나 mbti가 설정 안됨"
-      )
-    
-    # 코스 추천 로직 구현
-    courses = get_all_courses_service(supabase)
-    
+    if user_id is None:
+      courses = get_all_courses_service(supabase)
+      return CourseListResponse(courses=courses)
+
+    # user_id가 주어진 경우: 완료한 코스만 반환
+    courses = get_completed_courses_service(user_id, supabase)
     return CourseListResponse(courses=courses)
   except HTTPException:
     raise
@@ -146,6 +140,45 @@ def complete_course(course_id: str, user_id: str, supabase: Client = Depends(get
     raise
   except Exception as e:
     raise HTTPException(500, detail="코스 완료 처리 중 오류가 발생했습니다.")
+
+@router.post("/courses/{course_id}/{user_id}/start", response_model=Message)
+def start_course(course_id: str, user_id: str, supabase: Client = Depends(get_supabase)):
+    """
+    코스 시작
+    - completed_courses에 기존 기록이 있으면 삭제
+    """
+    try:
+        cid = _parse_int_from_path('course_id', course_id)
+        uid = _parse_int_from_path('user_id', user_id)
+
+        start_course_service(uid, cid, supabase)
+        return Message(message="코스 시작!")
+    except ValueError as e:
+        raise HTTPException(404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail="코스 시작 처리 중 오류가 발생했습니다.")
+
+
+@router.post("/courses/{course_id}/{user_id}/finish", response_model=Message)
+def finish_course(course_id: str, user_id: str, supabase: Client = Depends(get_supabase)):
+    """
+    코스 종료
+    - completed_courses에 INSERT
+    """
+    try:
+        cid = _parse_int_from_path('course_id', course_id)
+        uid = _parse_int_from_path('user_id', user_id)
+
+        finish_course_service(uid, cid, supabase)
+        return Message(message="코스 완료! 저장 되었습니다!")
+    except ValueError as e:
+        raise HTTPException(404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, detail="코스 완료 처리 중 오류가 발생했습니다.")
 
 
 # review
