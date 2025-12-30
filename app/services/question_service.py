@@ -91,16 +91,15 @@ def answer_question_service(question_id: int, answer: str, supabase: Client) -> 
     질문에 답변을 저장합니다.
     """
     try:
-        question = supabase.table('questions').select('*').eq('id', question_id).execute()
-        if not question.data or len(question.data) == 0:
+        question_resp = supabase.table('questions').select('*').eq('id', question_id).execute()
+        if not question_resp.data or len(question_resp.data) == 0:
             raise ValueError("질문을 찾을 수 없습니다.")
 
-        response = supabase.table('questions')\
+        update_resp = supabase.table('questions')\
             .update({'answer': answer, 'answered_at': datetime.now().isoformat()})\
             .eq('id', question_id)\
             .execute()
         
-        return response.data[0] if response.data else {}
+        return update_resp.data[0] if update_resp and getattr(update_resp, "data", None) else {}
     except Exception as e:
-        print(f"질문 답변 실패: {e}")
         raise e

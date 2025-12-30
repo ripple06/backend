@@ -28,7 +28,7 @@ async def create_question(
         return Message(message="당신의 질문이 생성되었습니다!")
     except ValueError as e:
         raise HTTPException(404, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(500, detail="질문 생성 중 오류가 발생했습니다.")
 
 
@@ -48,12 +48,13 @@ async def get_question(
             raise HTTPException(404, detail="질문을 찾을 수 없습니다.")
         
         return QuestionItem(
+            id=question.get('id'),
             title=question['title'],
             content=question['content']
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(500, detail="질문 조회 중 오류가 발생했습니다.")
 
 
@@ -71,6 +72,7 @@ async def get_question_list(
         
         question_items = [
             QuestionItem(
+                id=q.get('id'),
                 title=q['title'],
                 content=q['content']
             )
@@ -78,7 +80,7 @@ async def get_question_list(
         ]
         
         return QuestionListResponse(questions=question_items)
-    except Exception as e:
+    except Exception:
         raise HTTPException(500, detail="질문 목록 조회 중 오류가 발생했습니다.")
     
 # 4. 질문 대답하기 API
@@ -92,9 +94,12 @@ async def answer_question(
     특정 질문에 대한 답변을 저장합니다.
     """
     try:
-        answer_question_service(question_id, answer.get('answer'), supabase)
+        # 실제 서비스 호출
+        result = answer_question_service(question_id, answer.answer, supabase)
         return Message(message="질문 답변 성공!")
     except ValueError as e:
         raise HTTPException(404, detail=str(e))
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(500, detail="질문 답변 중 오류가 발생했습니다.")
