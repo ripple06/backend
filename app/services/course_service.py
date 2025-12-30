@@ -1,18 +1,29 @@
 # app/services/course_service.py
+import random
 from supabase import Client
-from app.schemas.location import SeaEmotion
+from app.schemas.schemas import *
+from typing import Optional
 
-def recommend_course(mbti: str, sea_emotion: SeaEmotion, supabase: Client):
+def get_mbti(user_id: int, supabase: Client) -> Optional[str]:
     """
-    사용자의 MBTI와 바다 분석 결과를 기반으로 코스를 추천하는 로직 (Supabase 버전).
-    - 실제 구현 시, MBTI와 감정 상태에 따라 코스를 필터링하거나
-      점수를 매겨 가장 적합한 코스를 찾는 복잡한 로직이 필요합니다.
-    - 현재는 등록된 코스 중 첫 번째 코스를 반환하는 예시입니다.
+    사용자의 MBTI를 조회합니다.
+    
+    Args:
+        user_id: 사용자 ID
+        supabase: Supabase 클라이언트
+        
+    Returns:
+        사용자의 MBTI 문자열, 존재하지 않으면 None
     """
     try:
-        # 예시: 단순히 첫 번째 코스를 추천
-        response = supabase.table("courses").select("*").limit(1).single().execute()
-        return response.data
-    except Exception:
-        # 코스가 하나도 없을 경우 single()에서 오류 발생 가능
+        response = supabase.table('users').select('mbti').eq('id', user_id).execute()
+        
+        if response.data and len(response.data) > 0:
+            return response.data[0]['mbti']
         return None
+    except Exception as e:
+        print(f"Error fetching MBTI for user {user_id}: {e}")
+        return None
+
+def recommend_course(mbti: str, sea_emotion: SeaEmotionRequest, supabase: Client):
+    pass

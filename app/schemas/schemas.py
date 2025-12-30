@@ -60,6 +60,11 @@ class QuizResponse(BaseModel):
     correct: int
 
 
+# global
+class Message(BaseModel):
+    message: str
+
+
 # user
 class UserBase(BaseModel):
     mbti: Optional[str] = None

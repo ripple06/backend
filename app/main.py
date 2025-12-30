@@ -8,11 +8,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# API 라우터 추가
-app.include_router(users.router)
-app.include_router(courses.router)
-app.include_router(locations.router)
-app.include_router(quiz.router)
+app.include_router(courses.router, prefix="/api", tags=["courses"])
 
 @app.get("/", tags=["Root"])
 async def read_root():
