@@ -12,6 +12,21 @@ from app.core.supabase_client import get_supabase
 
 router = APIRouter()
 
+def _safe_int(val):
+    """
+    val을 안전하게 int로 변환. 변환 실패하면 None 반환.
+    """
+    if val is None:
+        return None
+    try:
+        return int(val)
+    except Exception:
+        try:
+            s = str(val).strip()
+            return int(s) if s.isdigit() else None
+        except Exception:
+            return None
+
 # 4. 질문 대답하기 API
 @router.post("/questions/{question_id}/answer", response_model=Message)
 async def answer_question(
@@ -70,9 +85,11 @@ async def get_question(
             raise HTTPException(404, detail="질문을 찾을 수 없습니다.")
         
         return QuestionItem(
-            id=question.get('id'),
-            title=question['title'],
-            content=question['content']
+            id=_safe_int(question.get('id')),
+            title=question.get('title'),
+            content=question.get('content'),
+            answer=question.get('answer') if question.get('answer') is not None else None,
+            answerId=_safe_int(question.get('answerId'))
         )
     except HTTPException:
         raise
@@ -94,9 +111,11 @@ async def get_question_list(
         
         question_items = [
             QuestionItem(
-                id=q.get('id'),
-                title=q['title'],
-                content=q['content']
+                id=_safe_int(q.get('id')),
+                title=q.get('title'),
+                content=q.get('content'),
+                answer=q.get('answer') if q.get('answer') is not None else None,
+                answerId=_safe_int(q.get('answerId'))
             )
             for q in questions
         ]
