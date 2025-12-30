@@ -12,6 +12,28 @@ from app.core.supabase_client import get_supabase
 
 router = APIRouter()
 
+# 4. 질문 대답하기 API
+@router.post("/questions/{question_id}/answer", response_model=Message)
+async def answer_question(
+    question_id: int,
+    answer: QuestionAnswer,
+    supabase: Client = Depends(get_supabase)
+):
+    """
+    특정 질문에 대한 답변을 저장합니다.
+    """
+    try:
+        # 실제 서비스 호출
+        result = answer_question_service(question_id, answer.answer, supabase)
+        return Message(message="질문 답변 성공!")
+    except ValueError as e:
+        raise HTTPException(404, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(500, detail="질문 답변 중 오류가 발생했습니다.")
+
+
 # 1. 질문 생성 API
 @router.post("/questions/{course_id}/{user_id}", response_model=Message)
 async def create_question(
@@ -82,24 +104,3 @@ async def get_question_list(
         return QuestionListResponse(questions=question_items)
     except Exception:
         raise HTTPException(500, detail="질문 목록 조회 중 오류가 발생했습니다.")
-    
-# 4. 질문 대답하기 API
-@router.post("/questions/{question_id}/answer", response_model=Message)
-async def answer_question(
-    question_id: int,
-    answer: QuestionAnswer,
-    supabase: Client = Depends(get_supabase)
-):
-    """
-    특정 질문에 대한 답변을 저장합니다.
-    """
-    try:
-        # 실제 서비스 호출
-        result = answer_question_service(question_id, answer.answer, supabase)
-        return Message(message="질문 답변 성공!")
-    except ValueError as e:
-        raise HTTPException(404, detail=str(e))
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(500, detail="질문 답변 중 오류가 발생했습니다.")
