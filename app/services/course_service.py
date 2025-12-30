@@ -1,5 +1,4 @@
 # app/services/course_service.py
-import random
 from supabase import Client
 from app.schemas.schemas import *
 from typing import Optional, List
@@ -16,7 +15,7 @@ def get_mbti(user_id: int, supabase: Client) -> Optional[str]:
             return response.data[0]['mbti']
         return None
     except Exception as e:
-        print(f"Error fetching MBTI for user {user_id}: {e}")
+        print(f"MBTI 찾기 실패 > {user_id}: {e}")
         return None
 
 def recommend_course(mbti: str, sea_emotion: SeaEmotionRequest, supabase: Client):
@@ -62,7 +61,7 @@ def create_review_service(user_id: int, course_id: int, review_data: ReviewItem,
             raise Exception("리뷰 생성에 실패했습니다.")
             
     except Exception as e:
-        print(f"Error creating review: {e}")
+        print(f"후기 생성 실패: {e}")
         raise e
 
 def update_review_service(user_id: int, course_id: int, review_data: ReviewItem, supabase: Client) -> dict:
@@ -102,7 +101,7 @@ def update_review_service(user_id: int, course_id: int, review_data: ReviewItem,
             raise Exception("리뷰 수정에 실패했습니다.")
             
     except Exception as e:
-        print(f"Error updating review: {e}")
+        print(f"후기 수정 실패: {e}")
         raise e
 
 def delete_review_service(user_id: int, course_id: int, supabase: Client) -> bool:
@@ -130,7 +129,7 @@ def delete_review_service(user_id: int, course_id: int, supabase: Client) -> boo
         return True
             
     except Exception as e:
-        print(f"Error deleting review: {e}")
+        print(f"후기 삭제 실패: {e}")
         raise e
 
 def get_reviews_by_course(course_id: int, supabase: Client) -> List[dict]:
@@ -147,7 +146,7 @@ def get_reviews_by_course(course_id: int, supabase: Client) -> List[dict]:
         return response.data if response.data else []
             
     except Exception as e:
-        print(f"Error fetching reviews: {e}")
+        print(f"후기 조회 실패: {e}")
         return []
 
 def complete_course_service(user_id: int, course_id: int, supabase: Client) -> dict:
@@ -184,5 +183,5 @@ def complete_course_service(user_id: int, course_id: int, supabase: Client) -> d
         }
             
     except Exception as e:
-        print(f"Error completing course: {e}")
+        print(f"코스 기록 실패: {e}")
         raise e
