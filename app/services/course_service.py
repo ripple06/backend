@@ -1,4 +1,4 @@
-# app/services/course_service.py
+# app/services/course_service.py (기존 코드에 추가)
 from supabase import Client
 from app.schemas.schemas import *
 from typing import Optional, List
@@ -18,12 +18,61 @@ def get_mbti(user_id: int, supabase: Client) -> Optional[str]:
         print(f"MBTI 찾기 실패 > {user_id}: {e}")
         return None
 
-def recommend_course(mbti: str, sea_emotion: SeaEmotionRequest, supabase: Client):
+def get_all_courses_service(supabase: Client) -> List[dict]:
+    """
+    모든 코스를 조회합니다.
+    """
+    try:
+        response = supabase.table('courses')\
+            .select('id, name, totalDistance')\
+            .execute()
+        
+        return response.data if response.data else []
+    except Exception as e:
+        print(f"코스 목록 조회 실패: {e}")
+        return []
+
+def get_course_by_id_service(course_id: int, supabase: Client) -> Optional[dict]:
+    """
+    특정 코스의 상세 정보를 조회합니다 (경로 포함).
+    """
+    try:
+        # 코스 기본 정보 조회
+        course_response = supabase.table('courses')\
+            .select('id, name, totalDistance')\
+            .eq('id', course_id)\
+            .execute()
+        
+        if not course_response.data or len(course_response.data) == 0:
+            return None
+        
+        course = course_response.data[0]
+        
+        # 코스 경로 조회
+        path_response = supabase.table('path')\
+            .select('lat, lng')\
+            .eq('courseId', course_id)\
+            .execute()
+        
+        course['path'] = path_response.data if path_response.data else []
+        
+        return course
+    except Exception as e:
+        print(f"코스 상세 조회 실패: {e}")
+        return None
+
+def recommend_course(mbti: str, sea_emotion: SeaEmotionRequest, supabase: Client) -> List[dict]:
     """
     MBTI와 바다 감정을 기반으로 코스를 추천합니다.
     """
-    # TODO: 실제 추천 로직 구현
-    pass
+    try:
+        # TODO: MBTI와 바다 감정에 따른 추천 로직 구현
+        # 현재는 모든 코스를 반환
+        courses = get_all_courses_service(supabase)
+        return courses
+    except Exception as e:
+        print(f"코스 추천 실패: {e}")
+        return []
 
 def create_review_service(user_id: int, course_id: int, review_data: ReviewItem, supabase: Client) -> dict:
     """
@@ -152,12 +201,8 @@ def get_reviews_by_course(course_id: int, supabase: Client) -> List[dict]:
 def complete_course_service(user_id: int, course_id: int, supabase: Client) -> dict:
     """
     코스 완료를 기록합니다.
-    (완료 기록을 위한 별도 테이블이 필요할 수 있습니다)
     """
     try:
-        # 실제로는 course_completions 같은 테이블이 필요합니다
-        # 여기서는 임시로 questions 테이블에 완료 질문을 생성하는 것으로 가정
-        
         # 코스가 존재하는지 확인
         course = supabase.table('courses')\
             .select('id, name')\
@@ -175,6 +220,14 @@ def complete_course_service(user_id: int, course_id: int, supabase: Client) -> d
         
         if not user.data or len(user.data) == 0:
             raise ValueError("존재하지 않는 사용자입니다.")
+        
+        # TODO: 실제로는 course_completions 테이블에 저장하는 로직 추가
+        # completion_data = {
+        #     'userId': user_id,
+        #     'courseId': course_id,
+        #     'completed_at': datetime.now().isoformat()
+        # }
+        # supabase.table('course_completions').insert(completion_data).execute()
         
         return {
             "user_id": user_id,

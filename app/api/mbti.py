@@ -1,4 +1,4 @@
-# mbti.py
+# app/routes/mbti.py
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 from app.schemas.schemas import *
@@ -10,7 +10,7 @@ router = APIRouter()
 @router.post("/mbti/{user_id}", response_model=Message)
 async def save_mbti(
     user_id: int, 
-    request: MbtiRequest,
+    request: Mbti,
     supabase: Client = Depends(get_supabase)
 ):
     """
@@ -27,7 +27,7 @@ async def save_mbti(
     except Exception as e:
         raise HTTPException(500, detail="MBTI 저장 중 오류가 발생했습니다.")
 
-@router.get("/mbti/{user_id}", response_model=MbtiResponse)
+@router.get("/mbti/{user_id}", response_model=Mbti)
 async def get_mbti(
     user_id: int,
     supabase: Client = Depends(get_supabase)
@@ -43,7 +43,7 @@ async def get_mbti(
         if not mbti:
             raise HTTPException(404, detail="사용자를 찾을 수 없거나 MBTI가 설정되지 않았습니다.")
         
-        return MbtiResponse(mbti=mbti)
+        return Mbti(mbti=mbti)
         
     except HTTPException:
         raise
