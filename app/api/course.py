@@ -10,10 +10,23 @@ router = APIRouter()
 def _parse_int_from_path(name: str, value: str) -> int:
     """
     최소 변경: 경로 파라미터를 안전하게 int로 변환.
-    실패하면 HTTPException(400) 발생.
+    - "{course_id}" 같은 템플릿 형태인 경우 명확한 400 에러 메시지를 반환.
+    - 중괄호 안에 숫자만 있는 경우(e.g. "{123}")에는 파싱 허용.
     """
+    # 템플릿 형태 처리: "{...}"
+    if isinstance(value, str) and value.startswith('{') and value.endswith('}'):
+        inner = value[1:-1].strip()
+        if inner.isdigit():
+            return int(inner)
+        # 템플릿 사용 상태면 클라이언트 측 문제이므로 명확한 안내 반환
+        raise HTTPException(
+            status_code=400,
+            detail=f"경로 파라미터 '{name}'에 템플릿('{value}')이 전달되었습니다. 클라이언트에서 {name} 값을 실제 정수로 치환하여 요청하세요."
+        )
     try:
         return int(value)
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=400, detail=f"Path parameter '{name}' must be an integer. Received: {value}")
 
