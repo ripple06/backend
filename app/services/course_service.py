@@ -278,47 +278,6 @@ def get_reviews_by_course(course_id: int, supabase: Client) -> List[dict]:
         print(f"후기 조회 실패: {e}")
         return []
 
-def complete_course_service(user_id: int, course_id: int, supabase: Client) -> dict:
-    """
-    코스 완료를 기록합니다.
-    """
-    try:
-        # 코스가 존재하는지 확인
-        course = supabase.table('courses')\
-            .select('id, name')\
-            .eq('id', course_id)\
-            .execute()
-        
-        if not course.data or len(course.data) == 0:
-            raise ValueError("존재하지 않는 코스입니다.")
-        
-        # 사용자가 존재하는지 확인
-        user = supabase.table('users')\
-            .select('id, name')\
-            .eq('id', user_id)\
-            .execute()
-        
-        if not user.data or len(user.data) == 0:
-            raise ValueError("존재하지 않는 사용자입니다.")
-        
-        # TODO: 실제로는 course_completions 테이블에 저장하는 로직 추가
-        # completion_data = {
-        #     'userId': user_id,
-        #     'courseId': course_id,
-        #     'completed_at': datetime.now().isoformat()
-        # }
-        # supabase.table('course_completions').insert(completion_data).execute()
-        
-        return {
-            "user_id": user_id,
-            "course_id": course_id,
-            "completed_at": datetime.now().isoformat()
-        }
-            
-    except Exception as e:
-        print(f"코스 기록 실패: {e}")
-        raise e
-
 def get_completed_courses_service(user_id: int, supabase: Client) -> List[dict]:
     """
     특정 사용자가 완료한 코스 목록을 반환합니다.
@@ -390,3 +349,62 @@ def get_completed_courses_service(user_id: int, supabase: Client) -> List[dict]:
     except Exception as e:
         print(f"완료된 코스 조회 실패 (user_id={user_id}): {e}")
         return []
+
+def start_course_service(user_id: int, course_id: int, supabase: Client) -> None:
+    """
+    코스 시작
+    - completed_courses에 기존 기록이 있으면 삭제
+    """
+    try:
+        # 유효성 체크
+        course = supabase.table('courses').select('id').eq('id', course_id).execute()
+        if not course.data:
+            raise ValueError("존재하지 않는 코스입니다.")
+
+        user = supabase.table('users').select('id').eq('id', user_id).execute()
+        if not user.data:
+            raise ValueError("존재하지 않는 사용자입니다.")
+
+        # 기존 완료 기록 삭제 (있어도 되고 없어도 됨)
+        supabase.table('completed_courses')\
+            .delete()\
+            .eq('userId', user_id)\
+            .eq('courseId', course_id)\
+            .execute()
+
+    except Exception as e:
+        print(f"코스 시작 실패 (user_id={user_id}, course_id={course_id}): {e}")
+        raise e
+
+def finish_course_service(user_id: int, course_id: int, supabase: Client) -> dict:
+    """
+    코스 종료
+    - completed_courses에 INSERT
+    """
+    try:
+        # 유효성 체크
+        course = supabase.table('courses').select('id').eq('id', course_id).execute()
+        if not course.data:
+            raise ValueError("존재하지 않는 코스입니다.")
+
+        user = supabase.table('users').select('id').eq('id', user_id).execute()
+        if not user.data:
+            raise ValueError("존재하지 않는 사용자입니다.")
+
+        insert_data = {
+            "userId": user_id,
+            "courseId": course_id,
+            "completed_at": datetime.now().isoformat()
+        }
+
+        # UNIQUE 제약 때문에 중복 시 에러 → start에서 이미 정리됨
+        resp = supabase.table('completed_courses').insert(insert_data).execute()
+
+        if not resp.data:
+            raise Exception("코스 완료 저장 실패")
+
+        return resp.data[0]
+
+    except Exception as e:
+        print(f"코스 종료 실패 (user_id={user_id}, course_id={course_id}): {e}")
+        raise e
