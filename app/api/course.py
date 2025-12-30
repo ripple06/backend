@@ -103,7 +103,11 @@ def create_review(course_id: str, user_id: str, body: ReviewItem, supabase: Clie
   except HTTPException:
     raise
   except Exception as e:
-    raise HTTPException(500, detail="리뷰 등록 중 오류가 발생했습니다.")
+    # 변경: 상세 예외 로그 출력 및 응답에 예외 메시지 포함 (디버깅용)
+    import traceback
+    print(f"[ERROR] create_review failed: {e}")
+    traceback.print_exc()
+    raise HTTPException(500, detail=f"리뷰 등록 중 오류가 발생했습니다: {str(e)}")
 
 @router.put("/reviews/{course_id}/{user_id}", response_model=Message)
 def update_review(course_id: str, user_id: str, body: ReviewItem, supabase: Client = Depends(get_supabase)):
