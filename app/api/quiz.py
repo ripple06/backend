@@ -20,7 +20,5 @@ def get_random_quizes(supabase: Client = Depends(get_supabase)):
   except HTTPException:
     raise
   except Exception as e:
-    # 상세 로그 및 응답(디버깅용)
-    print(f"[ERROR] get_random_quizes failed: {e}")
     traceback.print_exc()
     raise HTTPException(500, detail=f"퀴즈 조회 중 오류가 발생했습니다: {str(e)}")

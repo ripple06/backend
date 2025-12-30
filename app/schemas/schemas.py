@@ -19,6 +19,7 @@ class Mbti(BaseModel):
 class QuestionItem(BaseModel):
   title: str
   content: Optional[str] = None
+  id: Optional[int] = None  # 추가: 응답에 id 포함 가능, 생성 시에는 미전달 허용
 
 class QuestionListResponse(BaseModel):
     questions: List[QuestionItem]

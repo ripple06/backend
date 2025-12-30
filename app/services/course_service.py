@@ -291,32 +291,24 @@ def get_completed_courses_service(user_id: int, supabase: Client) -> List[dict]:
             .eq('userId', user_id)\
             .execute()
         
-        # 디버그: 원시 응답 출력
-        print(f"[DEBUG] completed_courses resp for user_id={user_id}: {getattr(resp, 'data', None)}")
-        
         if not resp.data:
-            print(f"[DEBUG] no completed_courses rows for user_id={user_id}")
             return []
         
         course_ids = []
         for row in resp.data:
-            # row가 dict인 경우 여러 키 가능성에 대해 시도
             if isinstance(row, dict):
-                # 우선적인 키 목록
-                for key in ('courseId', 'courseid', 'course_id', 'course_id'):
+                for key in ('courseId', 'courseid', 'course_id'):
                     if key in row and row[key] is not None:
                         val = row[key]
                         try:
                             course_ids.append(int(val))
                         except Exception:
-                            # 문자열 숫자일 수 있음
                             try:
                                 course_ids.append(int(str(val).strip()))
                             except Exception:
                                 pass
                         break
                 else:
-                    # 키가 없거나 변환 실패시 row의 값들 검사
                     for v in row.values():
                         if isinstance(v, int):
                             course_ids.append(v)
@@ -325,16 +317,13 @@ def get_completed_courses_service(user_id: int, supabase: Client) -> List[dict]:
                             course_ids.append(int(v.strip()))
                             break
             else:
-                # row가 단일 값(예: 정수)일 경우
                 try:
                     course_ids.append(int(row))
                 except Exception:
                     pass
 
-        # 중복 제거 및 정렬(optional)
         course_ids = sorted(set(course_ids))
         if not course_ids:
-            print(f"[DEBUG] unable to extract course_ids from completed_courses rows: {resp.data}")
             return []
 
         courses = []
@@ -342,8 +331,6 @@ def get_completed_courses_service(user_id: int, supabase: Client) -> List[dict]:
             course = get_course_by_id_service(cid, supabase)
             if course:
                 courses.append(course)
-            else:
-                print(f"[DEBUG] course not found for id={cid} (user_id={user_id})")
 
         return courses
     except Exception as e:
