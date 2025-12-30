@@ -1,6 +1,6 @@
 # app/schemas/user.py
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, List
+from typing import Optional, List, Any
 import uuid
 
 
@@ -73,8 +73,9 @@ class ReviewListReponse(BaseModel):
 
 # quiz
 class QuizResponse(BaseModel):
+    id: int
     title: str
-    content: List[str]
+    content: Any
     correct: int
 
 
