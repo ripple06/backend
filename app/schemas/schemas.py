@@ -23,6 +23,9 @@ class QuestionItem(BaseModel):
 class QuestionListResponse(BaseModel):
     questions: List[QuestionItem]
 
+class QuestionAnswer(BaseModel):
+    answer: str
+
 
 # seaEmotion
 class SeaEmotionRequest(BaseModel):

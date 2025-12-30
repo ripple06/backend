@@ -1,12 +1,12 @@
 # app/api/question.py
 from fastapi import APIRouter, HTTPException, Depends
 from supabase import Client
-from typing import List
 from app.schemas.schemas import *
 from app.services.question_service import (
     create_question_service,
     get_question_service,
-    get_question_list_service
+    get_question_list_service,
+    answer_question_service
 )
 from app.core.supabase_client import get_supabase
 
@@ -80,3 +80,21 @@ async def get_question_list(
         return QuestionListResponse(questions=question_items)
     except Exception as e:
         raise HTTPException(500, detail="질문 목록 조회 중 오류가 발생했습니다.")
+    
+# 4. 질문 대답하기 API
+@router.post("/questions/{question_id}/answer", response_model=Message)
+async def answer_question(
+    question_id: int,
+    answer: QuestionAnswer,
+    supabase: Client = Depends(get_supabase)
+):
+    """
+    특정 질문에 대한 답변을 저장합니다.
+    """
+    try:
+        answer_question_service(question_id, answer.get('answer'), supabase)
+        return Message(message="질문 답변 성공!")
+    except ValueError as e:
+        raise HTTPException(404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(500, detail="질문 답변 중 오류가 발생했습니다.")
