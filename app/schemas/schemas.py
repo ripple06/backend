@@ -26,6 +26,12 @@ class SeaEmotionResponse(BaseModel):
     name: str
 
 
+# seaEcosystem
+class SeaEcosystemResponse(BaseModel):
+    creature: str
+    specialties: str
+
+
 # course
 class PathPoint(BaseModel):
     lat: float
